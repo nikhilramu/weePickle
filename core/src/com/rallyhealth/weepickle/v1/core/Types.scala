@@ -276,7 +276,9 @@ trait Types { types =>
     def tagName: String
   }
   trait TaggedTo[T] extends SimpleTo[T] with Tagged {
-    def findTo(s: String): To[T]
+//    def findTo(s: String): To[T]
+//    def findTo(s: Boolean): To[T]
+    def findTo[Q](s: Q): To[T]
 
     override def expectedMsg = taggedExpectedMsg
     override def visitArray(length: Int) = taggedArrayContext(this)
@@ -284,16 +286,27 @@ trait Types { types =>
   }
   object TaggedTo {
     class Leaf[T](override val tagName: String, tag: String, r: To[T]) extends TaggedTo[T] {
-      def findTo(s: String) = if (s == tag) r else null
+      def findTo[String](s: String) = if (s == tag) r else null
     }
     class Node[T](rs: TaggedTo[_ <: T]*) extends TaggedTo[T] {
       override val tagName: String = findTagName(rs)
-      def findTo(s: String) = scanChildren(rs)(_.findTo(s)).asInstanceOf[To[T]]
+      def findTo[String](s: String) = scanChildren(rs)(_.findTo(s)).asInstanceOf[To[T]]
+    }
+
+    class BooleanLeaf[T](override val tagName: String, tag: Boolean, r: To[T]) extends TaggedTo[T] {
+      def findTo[Boolean](s: Boolean) = if (s == tag) r else null
+    }
+    class BooleanNode[T](rs: TaggedTo[_ <: T]*) extends TaggedTo[T] {
+      override val tagName: String = findTagName(rs)
+      def findTo[Boolean](s: Boolean) = scanChildren(rs)(_.findTo(s)).asInstanceOf[To[T]]
     }
   }
 
   trait TaggedFrom[In] extends From[In] with Tagged {
-    def findFrom(v: Any): (String, CaseW[In])
+//    def findFrom(v: Any): (String, CaseW[In])
+//    def findFrom(v: Any): (Boolean, CaseW[In])
+    def findFrom[Q](v: Any): (Q, CaseW[In])
+
     override def transform0[Out](in: In, out: Visitor[_, Out]): Out = {
       val (tag, w) = findFrom(in)
       taggedWrite(w, tagName, tag, out, in)
@@ -302,14 +315,31 @@ trait Types { types =>
   }
   object TaggedFrom {
     class Leaf[T](c: ClassTag[_], override val tagName: String, tag: String, r: CaseW[T]) extends TaggedFrom[T] {
-      def findFrom(v: Any) = {
-        if (c.runtimeClass.isInstance(v)) tag -> r
+      def findFrom[String](v: Any) = {
+        if (c.runtimeClass.isInstance(v)) {
+          val f: (String, CaseW[T]) = tag -> r
+          f
+        }
         else null
       }
     }
     class Node[T](rs: TaggedFrom[_ <: T]*) extends TaggedFrom[T] {
       override val tagName: String = findTagName(rs)
-      def findFrom(v: Any) = scanChildren(rs)(_.findFrom(v)).asInstanceOf[(String, CaseW[T])]
+      def findFrom[String](v: Any) = scanChildren(rs)(_.findFrom(v)).asInstanceOf[(String, CaseW[T])]
+    }
+
+    class BooleanLeaf[T](c: ClassTag[_], override val tagName: String, tag: Boolean, r: CaseW[T]) extends TaggedFrom[T] {
+      def findFrom[Boolean](v: Any): (Boolean, CaseW[T]) = {
+        if (c.runtimeClass.isInstance(v)) {
+          val f: (Boolean, CaseW[T]) = tag -> r
+          f
+        }
+        else null
+      }
+    }
+    class BooleanNode[T](rs: TaggedFrom[_ <: T]*) extends TaggedFrom[T] {
+      override val tagName: String = findTagName(rs)
+      def findFrom[Boolean](v: Any) = scanChildren(rs)(_.findFrom(v)).asInstanceOf[(Boolean, CaseW[T])]
     }
   }
 

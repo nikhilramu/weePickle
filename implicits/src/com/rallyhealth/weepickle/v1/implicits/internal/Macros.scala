@@ -259,8 +259,20 @@ object Macros {
           case Some(customName) => Literal(Constant(customName))
           case None             => q"${c.prefix}.tagName"
         }
-        val tag = customKey(tpe.typeSymbol).getOrElse(tpe.typeSymbol.fullName)
-        q"""${c.prefix}.annotate($derived, $tagName, $tag)"""
+        val tag1: Option[String] = customKey(tpe.typeSymbol)
+        val tag2: Option[String] = customBoolKey(tpe.typeSymbol)
+        (tag, tag2) match {
+          case (Some(_), _) =>
+            val tag = tag1
+            q"""${c.prefix}.annotate($derived, $tagName, $tag)"""
+          case (_, Some(_)) =>
+            val tag = tag2
+            q"""${c.prefix}.annotate($derived, $tagName, $tag)"""
+          case (_, _) =>
+            val tag = tpe.typeSymbol.fullName
+            q"""${c.prefix}.annotate($derived, $tagName, $tag)"""
+        }
+//        q"""${c.prefix}.annotate($derived, $tagName, $tag)"""
       }
     }
 
@@ -271,13 +283,14 @@ object Macros {
         .map { case Literal(Constant(s)) => s.toString }
     }
 
-    def customBoolKey(sym: c.Symbol): Option[Boolean] = {
+    def customBoolKey(sym: c.Symbol): Option[String] = {
       sym.annotations
         .find(_.tree.tpe == typeOf[keyBoolean])
         .flatMap(_.tree.children.tail.headOption)
         .map { case Literal(Constant(s)) => 
-          val str = s.toString
+          val str: String = s.toString
           str.toBoolean
+          str
         }
     }
 

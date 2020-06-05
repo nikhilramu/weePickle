@@ -86,6 +86,14 @@ trait AttributeTagged extends Api {
     */
   def tagName: String = "$type"
 
+  def annotate[V, T](rw: CaseR[V], tagName: String, tag: Boolean) = {
+    new TaggedTo.BooleanLeaf[V](tagName, tag, rw)
+  }
+
+  def annotate[V](rw: CaseW[V], tagName: String, tag: Boolean)(implicit c: ClassTag[V]) = {
+    new TaggedFrom.BooleanLeaf[V](c, tagName, tag, rw)
+  }
+
   def annotate[V](rw: CaseR[V], tagName: String, tag: String) = {
     new TaggedTo.Leaf[V](tagName, tag, rw)
   }
