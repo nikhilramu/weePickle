@@ -68,6 +68,9 @@ object Api {
       */
     def objectTypeKeyReadMap(s: CharSequence): CharSequence = s
     def objectTypeKeyWriteMap(s: CharSequence): CharSequence = s
+
+    def objectTypeKeyReadMapBoolean(s: Boolean): Boolean = s
+    def objectTypeKeyWriteMapBoolean(s: Boolean): Boolean = s
   }
 
 }
@@ -194,5 +197,14 @@ trait AttributeTagged extends Api {
     // w.writeToObject(ctx, v)
     // val res = ctx.visitEnd()
     // res
+
+//    val ctx = out.asInstanceOf[Visitor[Any, R]].visitObject(w.length(v) + 1)
+//    val keyVisitor = ctx.visitKey()
+//
+//    ctx.visitKeyValue(keyVisitor.visitString(tagName))
+//    ctx.visitValue(ctx.subVisitor.visitString(objectTypeKeyWriteMap(tag.toString)))
+//    w.writeToObject(ctx, v)
+//    val res = ctx.visitEnd()
+//    res
   }
 }
